@@ -1,4 +1,4 @@
-package com.plcoding.cryptotracker.crypto.presentation.coin_list
+package com.plcoding.cryptotracker.crypto.presentation.coinlist
 
 import androidx.compose.runtime.Immutable
 import com.plcoding.cryptotracker.crypto.presentation.models.CoinUi
