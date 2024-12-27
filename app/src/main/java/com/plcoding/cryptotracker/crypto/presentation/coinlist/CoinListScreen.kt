@@ -34,32 +34,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun CoinListScreen(
     state: CoinListState,
-    events: Flow<CoinListEvent>,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    // this will only run once
-    LaunchedEffect(true) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            // This is the workaround to ensure that events are not lost
-            // which can cause a state mismatch
-            withContext(Dispatchers.Main.immediate) {
-                events.collect { event ->
-                    when (event) {
-                        is CoinListEvent.Error -> {
-                            Toast.makeText(
-                                context,
-                                event.error.toString(context),
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-
-                }
-            }
-        }
-    }
 
     if (state.isLoading) {
         Box(
@@ -98,7 +74,6 @@ private  fun CoinListScreenPreview() {
                     previewCoin.copy(id = it.toString())
                 }
             ),
-            events = emptyFlow(),
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)
         )
