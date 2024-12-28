@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.plcoding.cryptotracker.core.domain.util.onError
 import com.plcoding.cryptotracker.core.domain.util.onSuccess
 import com.plcoding.cryptotracker.crypto.domain.CoinDataSource
+import com.plcoding.cryptotracker.crypto.presentation.coindetail.*
 import com.plcoding.cryptotracker.crypto.presentation.models.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.*
+import java.time.format.*
 
 class CoinListViewModel(
     private val coinDataSource: CoinDataSource
@@ -40,6 +42,7 @@ class CoinListViewModel(
 
     private fun selectCoin(coinUi: CoinUi) {
         _state.update { it.copy(selectedCoin = coinUi) }
+
         viewModelScope.launch {
             coinDataSource
                 .getCoinHistory(
@@ -48,9 +51,29 @@ class CoinListViewModel(
                     end = ZonedDateTime.now()
                 )
                 .onSuccess { history ->
-                   println(history)
+                    val dataPoints = history
+                        .sortedBy { it.dateTimestamp }
+                        .map {
+                            DataPoint(
+                                x = it.dateTimestamp.hour.toFloat(),
+                                y = it.priceUsd.toFloat(),
+                                xLabel = DateTimeFormatter
+                                    .ofPattern("ha\nM/d")
+                                    .format(it.dateTimestamp)
+                            )
+                        }
+
+                    _state.update {
+                        it.copy(
+                            selectedCoin = it.selectedCoin?.copy(
+                                coinPriceHistory = dataPoints
+                            )
+                        )
+                    }
                 }
-                .onError { error ->     }
+                .onError { error ->
+                    _events.send(CoinListEvent.Error(error))
+                }
         }
     }
 
